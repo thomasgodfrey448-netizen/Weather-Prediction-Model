@@ -249,7 +249,7 @@ input::placeholder {
 
 <!-- ================= TOP BAR ================= -->
 <div class="top-bar">
-    <div class="left-top">Temp Diff: {{ temp_diff or 0 }}°C</div>
+    <div class="left-top">Temp {{ temp_diff or 0 }}°C</div>
     <div class="right-top">{{ month_name|capitalize if month_name else "Month" }}</div>
 </div>
 
