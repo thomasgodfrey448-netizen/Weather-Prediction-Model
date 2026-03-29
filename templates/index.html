@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Weather Prediction Model</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ================= GLOBAL STYLE ================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    height: 100vh;
+    background: linear-gradient(135deg, #021024, #03254c, #054a91);
+    color: white;
+    overflow: hidden;
+}
+
+/* ================= TOP BAR ================= */
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px 20px;
+    font-size: 14px;
+}
+
+/* LEFT: TEMP DIFF */
+.left-top {
+    font-size: 26px;     
+    font-weight: bold;
+    color: #00eaff;     
+}
+
+/* RIGHT: MONTH */
+.right-top {
+    font-size: 30px;     
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* ================= NEW MAIN WRAPPER ================= */
+.main-content {
+    margin-top: 90px;   /* 👈 THIS MOVES EVERYTHING DOWN */
+}
+
+/* ================= DASHBOARD ================= */
+.dashboard {
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* ================= CLOUD ANIMATION ================= */
+.cloud {
+    width: 200px;
+    height: 120px;
+    margin: 20px auto;
+    border-radius: 100px;
+    position: relative;
+    animation: float 4s ease-in-out infinite;
+}
+
+.cloud:before,
+.cloud:after {
+    content: '';
+    position: absolute;
+    background: inherit;
+    border-radius: 50%;
+}
+
+.cloud:before {
+    width: 100px;
+    height: 100px;
+    top: -40px;
+    left: 20px;
+}
+
+.cloud:after {
+    width: 120px;
+    height: 120px;
+    top: -60px;
+    right: 20px;
+}
+
+@keyframes float {
+    0%,100% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+}
+
+/* ================= WEATHER TYPES ================= */
+.sun { background: #f1c40f; }
+.rain { background: #7f8c8d; }
+.snow { background: #ecf0f1; }
+.drizzle { background: #95a5a6; }
+.fog { background: #bdc3c7; }
+
+/* sun effect */
+.sun::after {
+    box-shadow: 0 0 30px yellow;
+}
+
+/* rain animation */
+.rain-drop {
+    position: absolute;
+    width: 2px;
+    height: 10px;
+    background: #00bfff;
+    animation: rain 1s linear infinite;
+}
+
+@keyframes rain {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(80px); opacity: 0; }
+}
+
+/* ================= CARDS ================= */
+.cards {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.card {
+    width: 120px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.1);
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+/* ================= BUTTON ================= */
+.btn {
+    margin-top: 20px;
+    padding: 10px 25px;
+    border: none;
+    border-radius: 20px;
+    background: #00a8ff;
+    color: white;
+    cursor: pointer;
+}
+
+/* ================= FORM MODAL ================= */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.form-box {
+    width: 90%;
+    max-width: 400px;
+    background: rgba(255,255,255,0.1);
+    padding: 20px;
+    border-radius: 15px;
+    backdrop-filter: blur(15px);
+}
+
+input, select {
+    width: 100%;
+    margin: 8px 0;
+    padding: 8px;
+    border-radius: 8px;
+    border: none;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.back-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    cursor: pointer;
+    color: white;
+}
+
+
+/* CARD CONTAINER */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+
+    margin-top: 20px;
+    padding: 12px 15px;
+
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+/* GENERAL BUTTON STYLE */
+.form-buttons button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s ease;
+    color: white;
+}
+
+/* RESET BUTTON (RED) */
+.form-buttons button[type="reset"] {
+    background: #e74c3c;
+}
+
+/* SUBMIT BUTTON (GREEN) */
+.form-buttons button[type="submit"] {
+    background: #2ecc71;
+}
+
+/* HOVER EFFECT */
+.form-buttons button:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+input::placeholder {
+    color: black;
+    font-style: normal;
+    opacity: 0.4;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<div class="top-bar">
+    <div class="left-top">Temp Diff: {{ temp_diff or 0 }}°C</div>
+    <div class="right-top">{{ month_name|capitalize if month_name else "Month" }}</div>
+</div>
+
+<div class="title">Weather Prediction Model</div>
+
+<!-- ================= MAIN CONTENT (MOVED DOWN) ================= -->
+<div class="main-content">
+
+    <!-- ================= DASHBOARD CLOUD ================= -->
+    <div class="dashboard">
+
+        {% set result = prediction[0]|lower if prediction else "" %}
+
+        {% if "rain" in result %}
+            <div class="cloud rain"></div>
+        {% elif "sun" in result %}
+            <div class="cloud sun"></div>
+        {% elif "snow" in result %}
+            <div class="cloud snow"></div>
+        {% elif "drizzle" in result %}
+            <div class="cloud drizzle"></div>
+        {% elif "fog" in result %}
+            <div class="cloud fog"></div>
+        {% else %}
+            <div class="cloud"></div>
+        {% endif %}
+
+        <h3>
+            {% if prediction %}
+                Predicted: {{ prediction[0] }}
+            {% else %}
+                Click Predict to see result
+            {% endif %}
+        </h3>
+    </div>
+
+    <!-- ================= INPUT CARDS ================= -->
+    <div class="cards">
+        <div class="card">Max Temp<br>{{ temp_max or 0 }}°C</div>
+        <div class="card">Min Temp<br>{{ temp_min or 0 }}°C</div>
+        <div class="card">Precipitation<br>{{ precipitation or 0 }}</div>
+        <div class="card">Wind<br>{{ wind or 0 }}</div>
+    </div>
+
+    <!-- ================= BUTTON ================= -->
+    <div style="text-align:center;">
+        <button type="button" class="btn" onclick="openForm()">Predict Weather</button>
+    </div>
+
+</div>
+
+<!-- ================= FORM MODAL ================= -->
+<div class="modal" id="modal">
+    <div class="form-box">
+
+        <div class="back-btn" onclick="closeForm()">⬅ Back</div>
+
+        <form method="POST" action="/predict">
+
+            <label>Month</label>
+            <select name="month" required>
+                <option>January</option><option>February</option><option>March</option>
+                <option>April</option><option>May</option><option>June</option>
+                <option>July</option><option>August</option><option>September</option>
+                <option>October</option><option>November</option><option>December</option>
+            </select>
+
+            <label>Precipitation</label>
+            <input type="number" name="precipitation" min="0" max="60" placeholder="Enter range from 0mm to 60mm">
+
+            <label>Max Temp</label>
+            <input type="number" name="temp_max" min="-40" max="40" placeholder="Enter range from -40°C to 40°C">
+
+            <label>Min Temp</label>
+            <input type="number" name="temp_min" min="-40" max="40" placeholder="Enter range from -40°C to 40°C">
+
+            <label>Wind</label>
+            <input type="number" name="wind" min="0.0" max="10.0" step="0.1" placeholder="Enter range from 0.0m/s to 10.0m/s">
+
+            <div class="form-buttons">
+                <button type="reset">Reset</button>
+                <button type="submit">Predict Weather</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+function openForm() {
+    document.getElementById("modal").style.display = "flex";
+}
+
+function closeForm() {
+    document.getElementById("modal").style.display = "none";
+}
+</script>
+
+</body>
+</html>
